@@ -3,9 +3,13 @@ use chrono::{NaiveDate, Weekday, Datelike};
 
 #[function_component]
 fn App() -> Html {
+    let year = use_state(|| 2024);
+    let month = use_state(|| 1);
+
     html! {
         <>
-            <Month year=2024 month=9></Month>
+            { format!("{:02}/{:04}", *month, *year) }
+            <Month year={*year} month={*month}></Month>
         </>
     }
 }
@@ -22,6 +26,11 @@ fn Month(props: &MonthProps) -> Html {
 
     html! {
         <div class={classes!("grid", "grid-cols-7", "justify-items-center", "text-center", "max-w-sm", "border-2", "rounded")}>
+            { for ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"].map(|name| html! {
+                <div class={classes!("w-full", "border", "font-bold")}>
+                    {name}
+                </div>
+            })}
             { for first_day.iter_days().take(42).map(|date| html! { <Day number={date.day()}></Day> }) }
         </div>
     }
