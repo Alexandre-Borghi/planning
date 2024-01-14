@@ -12,8 +12,9 @@ fn App() -> Html {
             ("S1".to_string(), "#0000ff".to_string()),
         ])
     });
-    let selected_timeslot = use_state(|| Option::<String>::None);
     let calendar = use_state(|| HashMap::<NaiveDate, String>::new());
+    let selected_timeslot = use_state(|| Option::<String>::None);
+    let is_editing = use_state(|| false);
     let now = chrono::Local::now();
     let year = use_state(|| now.year());
     let month = use_state(|| now.month());
@@ -57,7 +58,11 @@ fn App() -> Html {
     let day_onclick = {
         let calendar = calendar.clone();
         let selected_timeslot = selected_timeslot.clone();
+        let is_editing = is_editing.clone();
         Callback::from(move |date: NaiveDate| {
+            if !*is_editing {
+                return;
+            }
             let mut calendar_tmp = (*calendar).clone();
             match selected_timeslot.as_deref() {
                 Some(timeslot) => calendar_tmp.insert(date, timeslot.to_string()),
@@ -65,6 +70,13 @@ fn App() -> Html {
             };
             calendar.set(calendar_tmp);
         })
+    };
+
+    let toggle_edit_mode = {
+        let is_editing = is_editing.clone();
+        move |_| {
+            is_editing.set(!*is_editing);
+        }
     };
 
     html! {
@@ -76,15 +88,18 @@ fn App() -> Html {
             </div>
             <Month year={*year} month={*month} calendar={(*calendar).clone()} timeslots={(*timeslots).clone()} {day_onclick}></Month>
             <div class={classes!("flex", "gap-2")}>
+                <button onclick={toggle_edit_mode} class={classes!("px-4", "py-2", "border", "rounded-full")}>{"Edit"}</button>
+            if *is_editing {
             { for timeslots.iter().map(|(timeslot, color)| {
                 let timeslot_onclick = timeslot_onclick.clone();
                 let timeslot_clone = timeslot.clone();
                 let is_selected = selected_timeslot.as_ref().is_some_and(|selected| *selected == *timeslot);
                 html! {
-                    <button class={classes!("px-4", "py-2", "bg-red-500", "rounded-full", is_selected.then_some("ring"))}
+                    <button class={classes!("px-4", "py-2", "rounded-full", is_selected.then_some("ring"))}
                         style={format!("background-color: {}", *color)}
                         onclick={move |_| timeslot_onclick.emit(timeslot_clone.clone())}>{timeslot}</button>
             }}) }
+            }
             </div>
         </>
     }
