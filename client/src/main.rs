@@ -1,4 +1,4 @@
-use std::{collections::HashMap};
+use std::collections::HashMap;
 
 use chrono::{Datelike, NaiveDate, Weekday};
 use yew::prelude::*;
@@ -7,16 +7,11 @@ use yew::prelude::*;
 fn App() -> Html {
     let timeslots = use_state(|| vec![String::from("M1"), String::from("M2"), String::from("S1")]);
     let selected_timeslot = use_state(|| Option::<String>::None);
-    let calendar = use_state(|| {
-        HashMap::<NaiveDate, String>::from([
-            (NaiveDate::from_ymd(2024, 1, 5), "M1".to_string()),
-            (NaiveDate::from_ymd(2024, 1, 17), "S1".to_string()),
-        ])
-    });
+    let calendar = use_state(|| HashMap::<NaiveDate, String>::new());
     let year = use_state(|| 2024);
     let month = use_state(|| 1);
 
-    let onclick = {
+    let timeslot_onclick = {
         let selected_timeslot = selected_timeslot.clone();
         Callback::from(move |id: String| {
             if selected_timeslot
@@ -30,18 +25,31 @@ fn App() -> Html {
         })
     };
 
+    let day_onclick = {
+        let calendar = calendar.clone();
+        let selected_timeslot = selected_timeslot.clone();
+        Callback::from(move |date: NaiveDate| {
+            let mut calendar_tmp = (*calendar).clone();
+            match selected_timeslot.as_deref() {
+                Some(timeslot) => calendar_tmp.insert(date, timeslot.to_string()),
+                None => calendar_tmp.remove(&date),
+            };
+            calendar.set(calendar_tmp);
+        })
+    };
+
     html! {
         <>
             { format!("{:02}/{:04}", *month, *year) }
-            <Month year={*year} month={*month} calendar={(*calendar).clone()}></Month>
+            <Month year={*year} month={*month} calendar={(*calendar).clone()} {day_onclick}></Month>
             <div class={classes!("flex", "gap-2")}>
             { for timeslots.iter().cloned().map(|timeslot| {
-                let onclick = onclick.clone();
+                let timeslot_onclick = timeslot_onclick.clone();
                 let timeslot_clone = timeslot.clone();
                 let is_selected = selected_timeslot.as_ref().is_some_and(|selected| *selected == timeslot);
                 html! {
                     <button class={classes!("px-4", "py-2", "bg-red-500", "rounded-full", is_selected.then_some("ring"))}
-                        onclick={move |_| onclick.emit(timeslot_clone.clone())}>{timeslot}</button>
+                        onclick={move |_| timeslot_onclick.emit(timeslot_clone.clone())}>{timeslot}</button>
             }}) }
             </div>
         </>
@@ -53,6 +61,7 @@ struct MonthProps {
     year: i32,
     month: u32,
     calendar: HashMap<NaiveDate, String>,
+    day_onclick: Callback<NaiveDate>,
 }
 
 #[function_component]
@@ -69,22 +78,31 @@ fn Month(props: &MonthProps) -> Html {
                     {name}
                 </div>
             })}
-            { for first_day.iter_days().take(42).map(|date| html! { <Day number={date.day()} timeslot={props.calendar.get(&date).cloned()}></Day> }) }
+            { for first_day.iter_days().take(42).map(|date| html! { <Day {date} timeslot={props.calendar.get(&date).cloned()} onclick={props.day_onclick.clone()}></Day> }) }
         </div>
     }
 }
 
 #[derive(Properties, PartialEq)]
 struct DayProps {
-    number: u32,
+    date: NaiveDate,
     timeslot: Option<String>,
+    onclick: Callback<NaiveDate>,
 }
 
 #[function_component]
 fn Day(props: &DayProps) -> Html {
+    let onclick = {
+        let onclick = props.onclick.clone();
+        let date = props.date;
+        move |_| {
+            onclick.emit(date);
+        }
+    };
+
     html! {
-        <div class={classes!("w-full", "border")}>
-            <p>{props.number}</p>
+        <div class={classes!("w-full", "border")} {onclick}>
+            <p>{props.date.day()}</p>
             <p>{format!("{}", props.timeslot.clone().unwrap_or(".".to_string()))}</p>
         </div>
     }
