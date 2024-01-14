@@ -101,7 +101,7 @@ fn Day(props: &DayProps) -> Html {
     };
 
     html! {
-        <div class={classes!("w-full", "border")} {onclick}>
+        <div class={classes!("w-full", "border", "select-none")} {onclick}>
             <p>{props.date.day()}</p>
             <p>{format!("{}", props.timeslot.clone().unwrap_or(".".to_string()))}</p>
         </div>
