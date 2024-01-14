@@ -11,6 +11,28 @@ fn App() -> Html {
     let year = use_state(|| 2024);
     let month = use_state(|| 1);
 
+    let previous_month = {
+        let year = year.clone();
+        let month = month.clone();
+        move |_| {
+            let new_year = if *month == 1 { *year - 1 } else { *year };
+            let new_month = if *month == 1 { 12 } else { *month - 1 };
+            year.set(new_year);
+            month.set(new_month);
+        }
+    };
+
+    let next_month = {
+        let year = year.clone();
+        let month = month.clone();
+        move |_| {
+            let new_year = if *month == 12 { *year + 1 } else { *year };
+            let new_month = if *month == 12 { 1 } else { *month + 1 };
+            year.set(new_year);
+            month.set(new_month);
+        }
+    };
+
     let timeslot_onclick = {
         let selected_timeslot = selected_timeslot.clone();
         Callback::from(move |id: String| {
@@ -40,7 +62,11 @@ fn App() -> Html {
 
     html! {
         <>
-            { format!("{:02}/{:04}", *month, *year) }
+            <div class={classes!("flex", "justify-between")}>
+                <span><button onclick={previous_month} class={classes!("px-4", "py-2", "bg-blue-500", "text-white", "rounded-full")}>{"<"}</button></span>
+                <span>{ format!("{:02}/{:04}", *month, *year) }</span>
+                <span><button onclick={next_month} class={classes!("px-4", "py-2", "bg-blue-500", "text-white", "rounded-full")}>{">"}</button></span>
+            </div>
             <Month year={*year} month={*month} calendar={(*calendar).clone()} {day_onclick}></Month>
             <div class={classes!("flex", "gap-2")}>
             { for timeslots.iter().cloned().map(|timeslot| {
