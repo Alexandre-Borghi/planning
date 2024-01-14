@@ -74,7 +74,7 @@ fn App() -> Html {
                 <span>{ format!("{:02}/{:04}", *month, *year) }</span>
                 <span><button onclick={next_month} class={classes!("px-4", "py-2", "bg-blue-500", "text-white", "rounded-full")}>{">"}</button></span>
             </div>
-            <Month year={*year} month={*month} calendar={(*calendar).clone()} {day_onclick}></Month>
+            <Month year={*year} month={*month} calendar={(*calendar).clone()} timeslots={(*timeslots).clone()} {day_onclick}></Month>
             <div class={classes!("flex", "gap-2")}>
             { for timeslots.keys().cloned().map(|timeslot| {
                 let timeslot_onclick = timeslot_onclick.clone();
@@ -94,6 +94,7 @@ struct MonthProps {
     year: i32,
     month: u32,
     calendar: HashMap<NaiveDate, String>,
+    timeslots: HashMap<String, String>,
     day_onclick: Callback<NaiveDate>,
 }
 
@@ -111,7 +112,11 @@ fn Month(props: &MonthProps) -> Html {
                     {name}
                 </div>
             })}
-            { for first_day.iter_days().take(42).map(|date| html! { <Day {date} timeslot={props.calendar.get(&date).cloned()} onclick={props.day_onclick.clone()}></Day> }) }
+            { for first_day.iter_days().take(42).map(|date| {
+                let timeslot = props.calendar.get(&date).cloned();
+                let color = timeslot.as_ref().map(|timeslot| props.timeslots.get(timeslot).cloned()).unwrap_or(Some("#ffffff00".to_string())).unwrap_or("#ff0000".to_string());
+                html! { <Day {date} {timeslot} {color} onclick={props.day_onclick.clone()}></Day> }
+            }) }
         </div>
     }
 }
@@ -120,6 +125,7 @@ fn Month(props: &MonthProps) -> Html {
 struct DayProps {
     date: NaiveDate,
     timeslot: Option<String>,
+    color: String,
     onclick: Callback<NaiveDate>,
 }
 
@@ -136,7 +142,7 @@ fn Day(props: &DayProps) -> Html {
     html! {
         <div class={classes!("w-full", "border", "select-none")} {onclick}>
             <p>{props.date.day()}</p>
-            <p>{format!("{}", props.timeslot.clone().unwrap_or(".".to_string()))}</p>
+            <p style={format!("background-color: {}", props.color)}>{format!("{}", props.timeslot.clone().unwrap_or(".".to_string()))}</p>
         </div>
     }
 }
