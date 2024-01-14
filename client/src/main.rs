@@ -8,8 +8,9 @@ fn App() -> Html {
     let timeslots = use_state(|| vec![String::from("M1"), String::from("M2"), String::from("S1")]);
     let selected_timeslot = use_state(|| Option::<String>::None);
     let calendar = use_state(|| HashMap::<NaiveDate, String>::new());
-    let year = use_state(|| 2024);
-    let month = use_state(|| 1);
+    let now = chrono::Local::now();
+    let year = use_state(|| now.year());
+    let month = use_state(|| now.month());
 
     let previous_month = {
         let year = year.clone();
