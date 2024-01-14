@@ -76,12 +76,13 @@ fn App() -> Html {
             </div>
             <Month year={*year} month={*month} calendar={(*calendar).clone()} timeslots={(*timeslots).clone()} {day_onclick}></Month>
             <div class={classes!("flex", "gap-2")}>
-            { for timeslots.keys().cloned().map(|timeslot| {
+            { for timeslots.iter().map(|(timeslot, color)| {
                 let timeslot_onclick = timeslot_onclick.clone();
                 let timeslot_clone = timeslot.clone();
-                let is_selected = selected_timeslot.as_ref().is_some_and(|selected| *selected == timeslot);
+                let is_selected = selected_timeslot.as_ref().is_some_and(|selected| *selected == *timeslot);
                 html! {
                     <button class={classes!("px-4", "py-2", "bg-red-500", "rounded-full", is_selected.then_some("ring"))}
+                        style={format!("background-color: {}", *color)}
                         onclick={move |_| timeslot_onclick.emit(timeslot_clone.clone())}>{timeslot}</button>
             }}) }
             </div>
