@@ -5,7 +5,13 @@ use yew::prelude::*;
 
 #[function_component]
 fn App() -> Html {
-    let timeslots = use_state(|| vec![String::from("M1"), String::from("M2"), String::from("S1")]);
+    let timeslots = use_state(|| {
+        HashMap::from([
+            ("M1".to_string(), "#ff0000".to_string()),
+            ("M2".to_string(), "#00ff00".to_string()),
+            ("S1".to_string(), "#0000ff".to_string()),
+        ])
+    });
     let selected_timeslot = use_state(|| Option::<String>::None);
     let calendar = use_state(|| HashMap::<NaiveDate, String>::new());
     let now = chrono::Local::now();
@@ -70,7 +76,7 @@ fn App() -> Html {
             </div>
             <Month year={*year} month={*month} calendar={(*calendar).clone()} {day_onclick}></Month>
             <div class={classes!("flex", "gap-2")}>
-            { for timeslots.iter().cloned().map(|timeslot| {
+            { for timeslots.keys().cloned().map(|timeslot| {
                 let timeslot_onclick = timeslot_onclick.clone();
                 let timeslot_clone = timeslot.clone();
                 let is_selected = selected_timeslot.as_ref().is_some_and(|selected| *selected == timeslot);
