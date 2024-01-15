@@ -1,17 +1,30 @@
 use std::collections::HashMap;
 
 use chrono::{Datelike, NaiveDate, Weekday};
-use yew::prelude::*;
+use yew::{
+    prelude::*,
+    suspense::{use_future, UseFutureHandle},
+};
 use yew_hooks::prelude::*;
 
 #[function_component]
-fn App() -> Html {
-    let timeslots = use_map(HashMap::from([
-        ("M1".to_string(), "#ff0000".to_string()),
-        ("M2".to_string(), "#00ff00".to_string()),
-        ("S1".to_string(), "#0000ff".to_string()),
-    ]));
+fn App() -> HtmlResult {
+    let timeslots = use_map(HashMap::new());
     let calendar = use_map(HashMap::<NaiveDate, String>::new());
+    let _: UseFutureHandle<Result<_, gloo::net::Error>> = use_future(|| {
+        let timeslots = timeslots.clone();
+        async move {
+            let timeslots_json: HashMap<String, String> =
+                gloo::net::http::Request::get("/api/timeslots")
+                    .send()
+                    .await
+                    .unwrap()
+                    .json()
+                    .await?;
+            timeslots.set(timeslots_json);
+            Ok(())
+        }
+    })?;
     let selected_timeslot = use_state(|| Option::<String>::None);
     let is_editing = use_state(|| false);
     let now = chrono::Local::now();
@@ -76,7 +89,7 @@ fn App() -> Html {
         }
     };
 
-    html! {
+    Ok(html! {
         <>
             <div class={classes!("flex", "justify-between")}>
                 <span><button onclick={previous_month} class={classes!("px-4", "py-2", "bg-blue-500", "text-white", "rounded-full")}>{"<"}</button></span>
@@ -99,7 +112,7 @@ fn App() -> Html {
             }
             </div>
         </>
-    }
+    })
 }
 
 #[derive(Properties, PartialEq)]
@@ -160,6 +173,17 @@ fn Day(props: &DayProps) -> Html {
     }
 }
 
+#[function_component]
+fn SuspenseApp() -> Html {
+    let fallback = html! { "Loading..." };
+
+    html! {
+        <Suspense {fallback}>
+            <App></App>
+        </Suspense>
+    }
+}
+
 fn main() {
-    yew::Renderer::<App>::new().render();
+    yew::Renderer::<SuspenseApp>::new().render();
 }
