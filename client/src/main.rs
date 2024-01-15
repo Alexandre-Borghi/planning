@@ -2,17 +2,16 @@ use std::collections::HashMap;
 
 use chrono::{Datelike, NaiveDate, Weekday};
 use yew::prelude::*;
+use yew_hooks::prelude::*;
 
 #[function_component]
 fn App() -> Html {
-    let timeslots = use_state(|| {
-        HashMap::from([
-            ("M1".to_string(), "#ff0000".to_string()),
-            ("M2".to_string(), "#00ff00".to_string()),
-            ("S1".to_string(), "#0000ff".to_string()),
-        ])
-    });
-    let calendar = use_state(|| HashMap::<NaiveDate, String>::new());
+    let timeslots = use_map(HashMap::from([
+        ("M1".to_string(), "#ff0000".to_string()),
+        ("M2".to_string(), "#00ff00".to_string()),
+        ("S1".to_string(), "#0000ff".to_string()),
+    ]));
+    let calendar = use_map(HashMap::<NaiveDate, String>::new());
     let selected_timeslot = use_state(|| Option::<String>::None);
     let is_editing = use_state(|| false);
     let now = chrono::Local::now();
@@ -63,12 +62,10 @@ fn App() -> Html {
             if !*is_editing {
                 return;
             }
-            let mut calendar_tmp = (*calendar).clone();
             match selected_timeslot.as_deref() {
-                Some(timeslot) => calendar_tmp.insert(date, timeslot.to_string()),
-                None => calendar_tmp.remove(&date),
+                Some(timeslot) => calendar.insert(date, timeslot.to_string()),
+                None => calendar.remove(&date),
             };
-            calendar.set(calendar_tmp);
         })
     };
 
@@ -86,11 +83,11 @@ fn App() -> Html {
                 <span>{ format!("{:02}/{:04}", *month, *year) }</span>
                 <span><button onclick={next_month} class={classes!("px-4", "py-2", "bg-blue-500", "text-white", "rounded-full")}>{">"}</button></span>
             </div>
-            <Month year={*year} month={*month} calendar={(*calendar).clone()} timeslots={(*timeslots).clone()} {day_onclick}></Month>
+            <Month year={*year} month={*month} calendar={calendar.current().clone()} timeslots={timeslots.current().clone()} {day_onclick}></Month>
             <div class={classes!("flex", "gap-2")}>
                 <button onclick={toggle_edit_mode} class={classes!("px-4", "py-2", "border", "rounded-full")}>{"Edit"}</button>
             if *is_editing {
-            { for timeslots.iter().map(|(timeslot, color)| {
+            { for timeslots.current().iter().map(|(timeslot, color)| {
                 let timeslot_onclick = timeslot_onclick.clone();
                 let timeslot_clone = timeslot.clone();
                 let is_selected = selected_timeslot.as_ref().is_some_and(|selected| *selected == *timeslot);
