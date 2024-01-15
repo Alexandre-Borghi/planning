@@ -865,6 +865,7 @@ version = "0.1.0"
 dependencies = [
  "chrono",
  "gloo 0.11.0",
+ "wasm-bindgen-futures",
  "yew",
  "yew-hooks",
 ]

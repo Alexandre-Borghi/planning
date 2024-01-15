@@ -4,7 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-gloo = { version = "0.11.0", features = ["timers", "futures"] }
+gloo = { version = "0.11.0", features = ["timers", "futures", "utils"] }
 chrono = { version = "0.4.31", features = ["serde"] }
+wasm-bindgen-futures = "0.4.40"
 yew = { version = "0.21.0", features = ["csr"] }
 yew-hooks = "0.3.0"

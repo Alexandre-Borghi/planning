@@ -85,10 +85,31 @@ fn App() -> HtmlResult {
             if !*is_editing {
                 return;
             }
-            match selected_timeslot.as_deref() {
-                Some(timeslot) => calendar.insert(date, timeslot.to_string()),
-                None => calendar.remove(&date),
-            };
+
+            let calendar = calendar.clone();
+            let selected_timeslot = selected_timeslot.clone();
+            wasm_bindgen_futures::spawn_local(async move {
+                let body = format!(
+                    "{{\"date\": \"{date}\", \"timeslot\": {}}}",
+                    selected_timeslot
+                        .as_deref()
+                        .map(|s| format!("\"{s}\""))
+                        .unwrap_or("null".to_string())
+                );
+
+                gloo::net::http::Request::post("/api/calendar")
+                    .header("Content-Type", "application/json")
+                    .body(body)
+                    .unwrap()
+                    .send()
+                    .await
+                    .expect("post request to calendar returned an error");
+
+                match selected_timeslot.as_deref() {
+                    Some(timeslot) => calendar.insert(date, timeslot.to_string()),
+                    None => calendar.remove(&date),
+                };
+            })
         })
     };
 
