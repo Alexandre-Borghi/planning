@@ -13,6 +13,7 @@ fn App() -> HtmlResult {
     let calendar = use_map(HashMap::<NaiveDate, String>::new());
     let _: UseFutureHandle<Result<_, gloo::net::Error>> = use_future(|| {
         let timeslots = timeslots.clone();
+        let calendar = calendar.clone();
         async move {
             let timeslots_json: HashMap<String, String> =
                 gloo::net::http::Request::get("/api/timeslots")
@@ -22,6 +23,15 @@ fn App() -> HtmlResult {
                     .json()
                     .await?;
             timeslots.set(timeslots_json);
+            let calendar_json: HashMap<NaiveDate, String> =
+                gloo::net::http::Request::get("/api/calendar")
+                    .send()
+                    .await
+                    .unwrap()
+                    .json()
+                    .await?;
+            gloo::console::debug!(format!("calendar: {calendar_json:?}"));
+            calendar.set(calendar_json);
             Ok(())
         }
     })?;
