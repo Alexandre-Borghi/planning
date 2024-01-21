@@ -6,6 +6,11 @@ use yew::{
     suspense::{use_future, UseFutureHandle},
 };
 use yew_hooks::prelude::*;
+use yew_router::prelude::*;
+
+mod config_page;
+
+use config_page::ConfigPage;
 
 #[function_component]
 fn App() -> HtmlResult {
@@ -204,13 +209,30 @@ fn Day(props: &DayProps) -> Html {
     }
 }
 
+#[derive(Clone, Routable, PartialEq)]
+enum Route {
+    #[at("/")]
+    Home,
+    #[at("/config")]
+    Config,
+}
+
+fn switch(routes: Route) -> Html {
+    match routes {
+        Route::Home => html! { <App></App> },
+        Route::Config => html! { <ConfigPage></ConfigPage> },
+    }
+}
+
 #[function_component]
 fn SuspenseApp() -> Html {
     let fallback = html! { "Loading..." };
 
     html! {
         <Suspense {fallback}>
-            <App></App>
+            <BrowserRouter>
+                <Switch<Route> render={switch} />
+            </BrowserRouter>
         </Suspense>
     }
 }
