@@ -233,8 +233,8 @@ fn SuspenseApp() -> Html {
             <BrowserRouter>
                 <Switch<Route> render={switch} />
                 <nav>
-                    <Link<Route> to={Route::Home}>{"Accueil"}</Link<Route>>
-                    <Link<Route> to={Route::Config}>{"Configuration"}</Link<Route>>
+                    <Link<Route> to={Route::Home}><img src="/img/icon-home.svg" /></Link<Route>>
+                    <Link<Route> to={Route::Config}><img src="/img/icon-settings.svg" /></Link<Route>>
                 </nav>
             </BrowserRouter>
         </Suspense>
