@@ -232,6 +232,10 @@ fn SuspenseApp() -> Html {
         <Suspense {fallback}>
             <BrowserRouter>
                 <Switch<Route> render={switch} />
+                <nav>
+                    <Link<Route> to={Route::Home}>{"Accueil"}</Link<Route>>
+                    <Link<Route> to={Route::Config}>{"Configuration"}</Link<Route>>
+                </nav>
             </BrowserRouter>
         </Suspense>
     }
