@@ -94,7 +94,6 @@ fn App() -> HtmlResult {
                 <button onclick={toggle_edit_mode} class={classes!("px-4", "py-2", "border", "rounded-full")}>{"Edit"}</button>
             if *is_editing {
             { for timeslots.current().iter().map(|(timeslot, color)| {
-                let timeslot_onclick = timeslot_onclick.clone();
                 let timeslot_clone = timeslot.clone();
                 let is_selected = selected_timeslot.as_ref().is_some_and(|selected| *selected == *timeslot);
                 html! {
