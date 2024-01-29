@@ -55,12 +55,14 @@ fn App() -> HtmlResult {
         },
     );
 
-    let day_onclick = {
-        let calendar = calendar.clone();
-        let selected_timeslot = selected_timeslot.clone();
-        let is_editing = is_editing.clone();
-        Callback::from(move |date: NaiveDate| {
-            if !*is_editing {
+    let day_onclick = use_callback(
+        (
+            calendar.clone(),
+            selected_timeslot.clone(),
+            is_editing.clone(),
+        ),
+        move |date: NaiveDate, (calendar, selected_timeslot, is_editing)| {
+            if !**is_editing {
                 return;
             }
 
@@ -75,7 +77,7 @@ fn App() -> HtmlResult {
                         .unwrap_or("null".to_string())
                 );
 
-                gloo::net::http::Request::post("/api/calendar")
+                Request::post("/api/calendar")
                     .header("Content-Type", "application/json")
                     .body(body)
                     .unwrap()
@@ -83,13 +85,13 @@ fn App() -> HtmlResult {
                     .await
                     .expect("post request to calendar returned an error");
 
-                match selected_timeslot.as_deref() {
-                    Some(timeslot) => calendar.insert(date, timeslot.to_string()),
+                match *selected_timeslot {
+                    Some(ref timeslot) => calendar.insert(date, timeslot.clone()),
                     None => calendar.remove(&date),
                 };
             })
-        })
-    };
+        },
+    );
 
     let toggle_edit_mode = {
         let is_editing = is_editing.clone();
