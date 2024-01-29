@@ -47,19 +47,13 @@ fn App() -> HtmlResult {
         },
     );
 
-    let timeslot_onclick = {
-        let selected_timeslot = selected_timeslot.clone();
-        Callback::from(move |id: String| {
-            if selected_timeslot
-                .as_ref()
-                .is_some_and(|selected| *selected == id)
-            {
-                selected_timeslot.set(None);
-            } else {
-                selected_timeslot.set(Some(id));
-            }
-        })
-    };
+    let timeslot_onclick = use_callback(
+        selected_timeslot.clone(),
+        move |id: String, selected_timeslot| match **selected_timeslot {
+            Some(ref selected) if *selected == id => selected_timeslot.set(None),
+            _ => selected_timeslot.set(Some(id)),
+        },
+    );
 
     let day_onclick = {
         let calendar = calendar.clone();
@@ -122,7 +116,7 @@ fn App() -> HtmlResult {
                 html! {
                     <button class={classes!("px-4", "py-2", "rounded-full", is_selected.then_some("ring"))}
                         style={format!("background-color: {}", *color)}
-                        onclick={move |_| timeslot_onclick.emit(timeslot_clone.clone())}>{timeslot}</button>
+                        onclick={timeslot_onclick.reform(move |_| timeslot_clone.clone())}>{timeslot}</button>
             }}) }
             }
             </div>
