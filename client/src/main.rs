@@ -36,27 +36,16 @@ fn App() -> HtmlResult {
     let year = use_state(|| now.year());
     let month = use_state(|| now.month());
 
-    let previous_month = {
-        let year = year.clone();
-        let month = month.clone();
-        move |_| {
-            let new_year = if *month == 1 { *year - 1 } else { *year };
-            let new_month = if *month == 1 { 12 } else { *month - 1 };
-            year.set(new_year);
+    let month_update = use_callback(
+        (month.clone(), year.clone()),
+        move |delta: i32, (month, year)| {
+            let month_after_delta = **month as i32 + delta;
+            let new_month = (month_after_delta - 1).rem_euclid(12) as u32 + 1;
             month.set(new_month);
-        }
-    };
-
-    let next_month = {
-        let year = year.clone();
-        let month = month.clone();
-        move |_| {
-            let new_year = if *month == 12 { *year + 1 } else { *year };
-            let new_month = if *month == 12 { 1 } else { *month + 1 };
-            year.set(new_year);
-            month.set(new_month);
-        }
-    };
+            let year_delta = (month_after_delta - new_month as i32) / 12;
+            year.set(**year + year_delta);
+        },
+    );
 
     let timeslot_onclick = {
         let selected_timeslot = selected_timeslot.clone();
@@ -118,9 +107,9 @@ fn App() -> HtmlResult {
     Ok(html! {
         <>
             <div class={classes!("flex", "justify-between")}>
-                <span><button onclick={previous_month} class={classes!("px-4", "py-2", "bg-blue-500", "text-white", "rounded-full")}>{"<"}</button></span>
+                <span><button onclick={month_update.reform(|_| -1)} class={classes!("px-4", "py-2", "bg-blue-500", "text-white", "rounded-full")}>{"<"}</button></span>
                 <span>{ format!("{:02}/{:04}", *month, *year) }</span>
-                <span><button onclick={next_month} class={classes!("px-4", "py-2", "bg-blue-500", "text-white", "rounded-full")}>{">"}</button></span>
+                <span><button onclick={month_update.reform(|_| 1)} class={classes!("px-4", "py-2", "bg-blue-500", "text-white", "rounded-full")}>{">"}</button></span>
             </div>
             <Month year={*year} month={*month} calendar={calendar.current().clone()} timeslots={timeslots.current().clone()} {day_onclick}></Month>
             <div class={classes!("flex", "gap-2")}>
