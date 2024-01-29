@@ -69,22 +69,7 @@ fn App() -> HtmlResult {
             let calendar = calendar.clone();
             let selected_timeslot = selected_timeslot.clone();
             wasm_bindgen_futures::spawn_local(async move {
-                let body = format!(
-                    "{{\"date\": \"{date}\", \"timeslot\": {}}}",
-                    selected_timeslot
-                        .as_deref()
-                        .map(|s| format!("\"{s}\""))
-                        .unwrap_or("null".to_string())
-                );
-
-                Request::post("/api/calendar")
-                    .header("Content-Type", "application/json")
-                    .body(body)
-                    .unwrap()
-                    .send()
-                    .await
-                    .expect("post request to calendar returned an error");
-
+                update_calendar(date, selected_timeslot.as_deref()).await;
                 match *selected_timeslot {
                     Some(ref timeslot) => calendar.insert(date, timeslot.clone()),
                     None => calendar.remove(&date),
@@ -124,6 +109,23 @@ fn App() -> HtmlResult {
             </div>
         </>
     })
+}
+
+async fn update_calendar(date: NaiveDate, timeslot: Option<&str>) {
+    let body = format!(
+        "{{\"date\": \"{date}\", \"timeslot\": {}}}",
+        timeslot
+            .map(|s| format!("\"{s}\""))
+            .unwrap_or("null".to_string())
+    );
+
+    Request::post("/api/calendar")
+        .header("Content-Type", "application/json")
+        .body(body)
+        .unwrap()
+        .send()
+        .await
+        .expect("post request to calendar returned an error");
 }
 
 #[derive(Properties, PartialEq)]
