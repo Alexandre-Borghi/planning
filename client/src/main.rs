@@ -31,7 +31,7 @@ fn App() -> HtmlResult {
     })?;
 
     let selected_timeslot = use_state(|| Option::<String>::None);
-    let is_editing = use_state(|| false);
+    let is_editing = use_bool_toggle(false);
     let now = chrono::Local::now();
     let year = use_state(|| now.year());
     let month = use_state(|| now.month());
@@ -78,12 +78,9 @@ fn App() -> HtmlResult {
         },
     );
 
-    let toggle_edit_mode = {
-        let is_editing = is_editing.clone();
-        move |_| {
-            is_editing.set(!*is_editing);
-        }
-    };
+    let toggle_edit_mode = use_callback(is_editing.clone(), move |_, is_editing| {
+        is_editing.toggle();
+    });
 
     Ok(html! {
         <>
