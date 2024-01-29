@@ -1,10 +1,8 @@
 use std::collections::HashMap;
 
 use chrono::{Datelike, NaiveDate, Weekday};
-use yew::{
-    prelude::*,
-    suspense::{use_future, UseFutureHandle},
-};
+use gloo::net::http::Request;
+use yew::{prelude::*, suspense::use_future};
 use yew_hooks::prelude::*;
 use yew_router::prelude::*;
 
@@ -12,34 +10,26 @@ mod config_page;
 
 use config_page::ConfigPage;
 
+type Calendar = HashMap<NaiveDate, String>;
+type Timeslots = HashMap<String, String>;
+
 #[function_component]
 fn App() -> HtmlResult {
-    let timeslots = use_map(HashMap::new());
-    let calendar = use_map(HashMap::<NaiveDate, String>::new());
-    let _: UseFutureHandle<Result<_, gloo::net::Error>> = use_future(|| {
+    let timeslots = use_map(Timeslots::new());
+    let calendar = use_map(Calendar::new());
+    use_future(|| {
         let timeslots = timeslots.clone();
         let calendar = calendar.clone();
         async move {
-            let timeslots_json: HashMap<String, String> =
-                gloo::net::http::Request::get("/api/timeslots")
-                    .send()
-                    .await
-                    .unwrap()
-                    .json()
-                    .await?;
-            timeslots.set(timeslots_json);
-            let calendar_json: HashMap<NaiveDate, String> =
-                gloo::net::http::Request::get("/api/calendar")
-                    .send()
-                    .await
-                    .unwrap()
-                    .json()
-                    .await?;
-            gloo::console::debug!(format!("calendar: {calendar_json:?}"));
-            calendar.set(calendar_json);
-            Ok(())
+            let path = "/api/timeslots";
+            timeslots.set(Request::get(path).send().await.unwrap().json().await?);
+            let path = "/api/calendar";
+            calendar.set(Request::get(path).send().await.unwrap().json().await?);
+            gloo::console::debug!(format!("calendar: {:?}", calendar.current()));
+            Result::<(), gloo::net::Error>::Ok(())
         }
     })?;
+
     let selected_timeslot = use_state(|| Option::<String>::None);
     let is_editing = use_state(|| false);
     let now = chrono::Local::now();
