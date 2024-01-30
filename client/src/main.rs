@@ -47,7 +47,7 @@ fn App() -> HtmlResult {
         },
     );
 
-    let timeslot_onclick = use_callback(
+    let select_timeslot = use_callback(
         selected_timeslot.clone(),
         move |id: String, selected_timeslot| match **selected_timeslot {
             Some(ref selected) if *selected == id => selected_timeslot.set(None),
@@ -82,29 +82,81 @@ fn App() -> HtmlResult {
         is_editing.toggle();
     });
 
+    let previous_month = month_update.reform(|_| -1);
+    let next_month = month_update.reform(|_| 1);
+
+    let button_cl = classes!("px-4", "py-2", "rounded-full");
+    let button_primary_cl = classes!(button_cl.clone(), "bg-blue-500", "text-white");
+
+    let make_timeslot_buttons = {
+        let timeslots = timeslots.clone();
+        let selected_timeslot = selected_timeslot.clone();
+        let select_timeslot = select_timeslot.clone();
+        move || {
+            timeslots
+                .current()
+                .iter()
+                .map(|(timeslot, color)| {
+                    let is_selected = selected_timeslot
+                        .as_ref()
+                        .is_some_and(|selected| *selected == *timeslot);
+                    let select_timeslot = {
+                        let timeslot = timeslot.clone();
+                        select_timeslot.reform(move |_| timeslot.clone())
+                    };
+                    timeslot_button(&timeslot, &color, is_selected, select_timeslot)
+                })
+                .collect::<Html>()
+        }
+    };
+
     Ok(html! {
         <>
             <div class={classes!("flex", "justify-between")}>
-                <span><button onclick={month_update.reform(|_| -1)} class={classes!("px-4", "py-2", "bg-blue-500", "text-white", "rounded-full")}>{"<"}</button></span>
+                <span>
+                    <button onclick={previous_month}
+                            class={button_primary_cl.clone()}>
+                        {"<"}
+                    </button>
+                </span>
                 <span>{ format!("{:02}/{:04}", *month, *year) }</span>
-                <span><button onclick={month_update.reform(|_| 1)} class={classes!("px-4", "py-2", "bg-blue-500", "text-white", "rounded-full")}>{">"}</button></span>
+                <span>
+                    <button onclick={next_month} class={button_primary_cl}>
+                        {">"}
+                    </button>
+                </span>
             </div>
-            <Month year={*year} month={*month} calendar={calendar.current().clone()} timeslots={timeslots.current().clone()} {day_onclick}></Month>
+
+            <Month year={*year} month={*month}
+                   calendar={calendar.current().clone()}
+                   timeslots={timeslots.current().clone()}
+                   {day_onclick}>
+            </Month>
+
             <div class={classes!("flex", "gap-2")}>
-                <button onclick={toggle_edit_mode} class={classes!("px-4", "py-2", "border", "rounded-full")}>{"Edit"}</button>
-            if *is_editing {
-            { for timeslots.current().iter().map(|(timeslot, color)| {
-                let timeslot_clone = timeslot.clone();
-                let is_selected = selected_timeslot.as_ref().is_some_and(|selected| *selected == *timeslot);
-                html! {
-                    <button class={classes!("px-4", "py-2", "rounded-full", is_selected.then_some("ring"))}
-                        style={format!("background-color: {}", *color)}
-                        onclick={timeslot_onclick.reform(move |_| timeslot_clone.clone())}>{timeslot}</button>
-            }}) }
-            }
+                <button onclick={toggle_edit_mode}
+                        class={classes!(button_cl.clone(), "border")}>
+                    {"Edit"}
+                </button>
+                {is_editing.then(make_timeslot_buttons)}
             </div>
         </>
     })
+}
+
+fn timeslot_button(
+    timeslot: &str,
+    color: &str,
+    is_selected: bool,
+    onclick: Callback<MouseEvent>,
+) -> Html {
+    html! {
+        <button {onclick}
+                class={classes!("px-4", "py-2", "rounded-full", is_selected.then_some("ring"))}
+                style={format!("background-color: {}", color)}>
+            {timeslot}
+        </button>
+    }
 }
 
 async fn update_calendar(date: NaiveDate, timeslot: Option<&str>) {
