@@ -104,7 +104,7 @@ fn App() -> HtmlResult {
                         let timeslot = timeslot.clone();
                         select_timeslot.reform(move |_| timeslot.clone())
                     };
-                    timeslot_button(&timeslot, &color, is_selected, select_timeslot)
+                    timeslot_button(timeslot, color, is_selected, select_timeslot)
                 })
                 .collect::<Html>()
         }
