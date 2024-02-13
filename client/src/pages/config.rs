@@ -7,7 +7,7 @@ use yew::{
 use yew_hooks::prelude::*;
 
 #[function_component]
-pub fn ConfigPage() -> HtmlResult {
+pub fn Config() -> HtmlResult {
     let timeslots = use_map(HashMap::new());
     let _: UseFutureHandle<Result<_, gloo::net::Error>> = use_future(|| {
         let timeslots = timeslots.clone();
