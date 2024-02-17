@@ -1,7 +1,7 @@
 use yew::prelude::*;
 use yew_router::prelude::*;
 
-use pages::{calendar::Calendar, config::Config};
+use pages::{Calendar, Config, EditTimeslot};
 
 mod pages;
 mod services;
@@ -13,18 +13,23 @@ enum Route {
     Calendar,
     #[at("/config")]
     Config,
+    #[at("/config/:timeslot_id")]
+    EditTimeslot { timeslot_id: AttrValue },
 }
 
 fn switch(routes: Route) -> Html {
     match routes {
         Route::Calendar => html! { <Calendar></Calendar> },
         Route::Config => html! { <Config></Config> },
+        Route::EditTimeslot { timeslot_id } => {
+            html! { <EditTimeslot {timeslot_id}></EditTimeslot> }
+        }
     }
 }
 
 #[function_component]
 fn App() -> Html {
-    let fallback = html! { "Loading..." };
+    let fallback = html! { "Chargement..." };
 
     html! {
         <Suspense {fallback}>

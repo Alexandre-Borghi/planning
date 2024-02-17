@@ -5,6 +5,9 @@ use yew::{
     suspense::{use_future, UseFutureHandle},
 };
 use yew_hooks::prelude::*;
+use yew_router::prelude::*;
+
+use crate::Route;
 
 #[function_component]
 pub fn Config() -> HtmlResult {
@@ -30,7 +33,11 @@ pub fn Config() -> HtmlResult {
         <ul class={classes!("list-disc", "list-inside")}>
         { for timeslots.current().iter().map(|(timeslot, color)| {
         html! {
-            <li>{timeslot}{" : "}{color}</li>
+            <li>
+                <Link<Route> to={Route::EditTimeslot { timeslot_id: AttrValue::from(timeslot.clone()) }}>
+                    {timeslot}{" : "}{color}
+                </Link<Route>>
+            </li>
         }}) }
         </ul>
         </>
