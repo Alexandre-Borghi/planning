@@ -4,7 +4,7 @@ use yew::{
 };
 use yew_router::prelude::*;
 
-use crate::{types::Timeslots, Route};
+use crate::{services::timeslots, types::Timeslots, Route};
 
 #[derive(Debug, Default, Properties, PartialEq)]
 pub struct Props {
@@ -35,26 +35,31 @@ pub fn EditTimeslot(props: &Props) -> HtmlResult {
         }
     })?;
 
+    let onconfirm = use_callback(
+        (timeslot_id.clone(), timeslot_color.clone()),
+        move |e: MouseEvent, (timeslot_id, timeslot_color)| {
+            e.prevent_default();
+            let timeslot_id = timeslot_id.clone();
+            let timeslot_color = timeslot_color.clone();
+            wasm_bindgen_futures::spawn_local(async move {
+                timeslots::update(&timeslot_id, &timeslot_color).await;
+            })
+        },
+    );
+
     Ok(html! {
         <>
         <h1 class={classes!("mb-4", "text-4xl", "font-extrabold")}>{"Modifier "}{props.timeslot_id.clone()}</h1>
         <form>
             <div>
                 <label>
-                    {"Nom : "}
-                    <input type={"text"} value={(*timeslot_id).clone()}
-                        class={classes!("border", "border-black")} />
-                </label>
-            </div>
-            <div>
-                <label>
                     {"Couleur : "}
-                    <input type={"color"} value={(*timeslot_color).clone()}/>
+                    <input type={"color"} value={(*timeslot_color).clone()} />
                 </label>
             </div>
             <div>
                 <Link<Route> to={Route::Config}>{"Annuler"}</Link<Route>>
-                <button>{"Confirmer"}</button>
+                <button onclick={onconfirm}>{"Confirmer"}</button>
             </div>
         </form>
         </>
