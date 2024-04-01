@@ -1,6 +1,5 @@
 use std::{collections::HashMap, fs::File, io::BufReader};
 
-use actix_files;
 use actix_web::{get, post, web, App, Error, HttpResponse, HttpServer};
 use chrono::NaiveDate;
 use serde::Deserialize;
@@ -9,6 +8,7 @@ const TIMESLOTS_FILE: &str = "data/timeslots.json";
 const CALENDAR_FILE: &str = "data/calendar.json";
 
 type Calendar = HashMap<NaiveDate, String>;
+type Timeslots = HashMap<String, String>;
 
 #[get("/api/timeslots")]
 async fn api_timeslots() -> Result<actix_files::NamedFile, Error> {
@@ -16,6 +16,23 @@ async fn api_timeslots() -> Result<actix_files::NamedFile, Error> {
     Ok(timeslots
         .use_last_modified(true)
         .set_content_type(mime::APPLICATION_JSON))
+}
+
+#[post("/api/timeslots/{name}")]
+async fn api_timeslots_post(
+    path: web::Path<(String,)>,
+    body: web::Json<String>,
+) -> Result<HttpResponse, Error> {
+    let timeslots_file = File::open(TIMESLOTS_FILE)?;
+    let reader = BufReader::new(timeslots_file);
+    let mut timeslots: Timeslots = serde_json::from_reader(reader)?;
+
+    timeslots.insert(path.into_inner().0, body.0);
+
+    let timeslots_file = File::create(TIMESLOTS_FILE)?;
+    serde_json::to_writer(timeslots_file, &timeslots)?;
+
+    Ok(HttpResponse::Ok().finish())
 }
 
 #[get("/api/calendar")]
@@ -58,6 +75,7 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
         App::new()
             .service(api_timeslots)
+            .service(api_timeslots_post)
             .service(api_calendar_get)
             .service(api_calendar_post)
     })
