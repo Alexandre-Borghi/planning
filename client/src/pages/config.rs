@@ -27,14 +27,18 @@ pub fn Config() -> HtmlResult {
         }
     })?;
 
+    let timeslots_sorted = timeslots.current().clone();
+    let mut timeslots_sorted = timeslots_sorted.iter().collect::<Vec<_>>();
+    timeslots_sorted.sort_unstable();
+
     Ok(html! {
         <>
         <h1 class={classes!("mb-4", "text-4xl", "font-extrabold")}>{"Configuration"}</h1>
         <ul class={classes!("list-disc", "list-inside")}>
-        { for timeslots.current().iter().map(|(timeslot, color)| {
+        { for timeslots_sorted.iter().map(|(timeslot, color)| {
         html! {
             <li>
-                <Link<Route> to={Route::EditTimeslot { timeslot_id: AttrValue::from(timeslot.clone()) }}>
+                <Link<Route> to={Route::EditTimeslot { timeslot_id: AttrValue::from(timeslot.to_string()) }}>
                     {timeslot}{" : "}{color}
                 </Link<Route>>
             </li>
